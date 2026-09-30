@@ -1,0 +1,117 @@
+import { AdUnitConfig, GlobalAdSettings } from '../types';
+
+export const INITIAL_GLOBAL_ADS: GlobalAdSettings = {
+  adSensePublisherId: '',
+  autoAds: false,
+  globalHeadCode: '<script src="https://pl31577882.profitableratecpmnetwork.com/e2/56/22/e256227fe54aeaf1abd219636b758c7c.js"></script>',
+  popunderCode: '',
+  adBlockNoticeEnabled: false,
+};
+
+export const INITIAL_AD_UNITS: AdUnitConfig[] = [
+  {
+    id: 'ad-header-leaderboard',
+    name: 'Top Header Banner (728x90)',
+    placement: 'header_leaderboard',
+    enabled: true,
+    adFormat: 'banner',
+    title: 'Stream Privately with ShieldVPN',
+    sponsorName: 'ShieldVPN Global',
+    bannerImageUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80',
+    clickUrl: 'https://google.com?q=ShieldVPN+Secure+Streaming',
+    ctaText: 'Claim 70% Discount',
+    adText: 'Ultra-fast 10Gbps streaming servers. Zero logging, bypass geo-blocks anywhere in the world.',
+    cpmRate: 4.80,
+    cpcRate: 0.65,
+    impressions: 1420,
+    clicks: 86,
+  },
+  {
+    id: 'ad-preroll-video',
+    name: 'Video Player Pre-Roll Ad',
+    placement: 'preroll_video',
+    enabled: false,
+    title: 'Apex Nova 4K Gaming & Cinema Display',
+    sponsorName: 'Apex Electronics',
+    bannerImageUrl: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=1200&q=80',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    clickUrl: 'https://google.com?q=Apex+Nova+4K+Cinema+Monitor',
+    ctaText: 'Shop New Arrivals',
+    adText: 'Experience cinematic 144Hz OLED visuals with HDR1000 and spatial audio.',
+    cpmRate: 9.50,
+    cpcRate: 1.20,
+    impressions: 890,
+    clicks: 114,
+    skipDelaySeconds: 5,
+  },
+  {
+    id: 'ad-in-feed-native',
+    name: 'Catalog In-Feed Native Ad (300x250)',
+    placement: 'in_feed_native',
+    enabled: true,
+    adFormat: 'code',
+    customCode: `<script type="text/javascript">
+  atOptions = {
+    'key' : '03bcdf2a64cfff95918492b9ce80d00b',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script type="text/javascript" src="https://www.highrevenueformat.com/03bcdf2a64cfff95918492b9ce80d00b/invoke.js"></script>`,
+    title: 'High Revenue Format CPM Ad',
+    sponsorName: 'Adsterra Network',
+    bannerImageUrl: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80',
+    clickUrl: 'https://www.highrevenueformat.com',
+    ctaText: 'Visit Sponsor',
+    adText: 'High CPM banner format active on catalog.',
+    cpmRate: 4.50,
+    cpcRate: 0.60,
+    impressions: 2150,
+    clicks: 142,
+  },
+  {
+    id: 'ad-below-player',
+    name: 'Player Footer Ad (300x250)',
+    placement: 'below_player',
+    enabled: true,
+    adFormat: 'code',
+    customCode: `<script type="text/javascript">
+  atOptions = {
+    'key' : '03bcdf2a64cfff95918492b9ce80d00b',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script type="text/javascript" src="https://www.highrevenueformat.com/03bcdf2a64cfff95918492b9ce80d00b/invoke.js"></script>`,
+    title: 'High Revenue Format CPM Ad',
+    sponsorName: 'Adsterra Network',
+    bannerImageUrl: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=1200&q=80',
+    clickUrl: 'https://www.highrevenueformat.com',
+    ctaText: 'Visit Sponsor',
+    adText: 'High CPM banner format active below video player.',
+    cpmRate: 5.20,
+    cpcRate: 0.70,
+    impressions: 960,
+    clicks: 64,
+  },
+  {
+    id: 'ad-sticky-bottom',
+    name: 'Sticky Floating Bottom Ad',
+    placement: 'sticky_bottom',
+    enabled: true,
+    title: 'FibreLink Ultra - 2Gbps Home Internet',
+    sponsorName: 'FibreLink Telecom',
+    bannerImageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80',
+    clickUrl: 'https://google.com?q=FibreLink+High+Speed+Internet',
+    ctaText: 'Check Coverage',
+    adText: 'Stream 4K UHD across 10 devices simultaneously with zero buffering.',
+    cpmRate: 3.50,
+    cpcRate: 0.40,
+    impressions: 3410,
+    clicks: 182,
+  },
+];

@@ -1,0 +1,6 @@
+{
+  "name": "CinePulse - Movies, Series & Streaming Network",
+  "description": "Stream movies and TV series with responsive player, episode browser, CMS manager, and integrated monetization ad placements.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
