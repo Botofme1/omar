@@ -190,6 +190,89 @@ export async function fetchTmdbDetails(type: 'movie' | 'series' | 'tv', id: numb
   return null;
 }
 
+// ----------------------------------------------------
+// Real Jikan API Integration (MyAnimeList for Anime)
+// ----------------------------------------------------
+const JIKAN_BASE_URL = 'https://api.jikan.moe/v4';
+
+function formatJikanAnime(item: any): MediaItem {
+  const malId = item.mal_id;
+  const title = item.title_english || item.title || 'Anime';
+  const releaseYear = item.year || (item.aired?.from ? new Date(item.aired.from).getFullYear() : 2024);
+  const posterUrl = item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80';
+  const backdropUrl = item.trailer?.images?.maximum_image_url || item.images?.webp?.large_image_url || posterUrl;
+  const genres = (item.genres || []).map((g: any) => g.name);
+  if (!genres.includes('Animation')) genres.unshift('Animation');
+
+  const episodeCount = item.episodes || 12;
+  const episodes = Array.from({ length: Math.min(episodeCount, 24) }, (_, idx) => ({
+    id: `mal-${malId}-ep-${idx + 1}`,
+    episodeNumber: idx + 1,
+    title: `Episode ${idx + 1}`,
+    duration: item.duration ? item.duration.replace('per ep', '').trim() : '24m',
+    synopsis: `Episode ${idx + 1} of ${title}.`,
+    videoUrl: `https://vidsrc.to/embed/tv/${malId}/1/${idx + 1}`,
+    thumbnailUrl: posterUrl,
+  }));
+
+  return {
+    id: `mal-anime-${malId}`,
+    malId,
+    title,
+    arabicTitle: item.title_japanese || undefined,
+    keywords: [title.toLowerCase(), ...(item.title_synonyms || []).map((s: string) => s.toLowerCase()), 'anime', 'انمي'],
+    type: 'series',
+    tagline: item.type ? `${item.type} · ${item.status || 'Finished Airing'}` : undefined,
+    synopsis: item.synopsis || 'No synopsis provided.',
+    releaseYear: isNaN(releaseYear) ? 2024 : releaseYear,
+    rating: item.score ? Number(item.score.toFixed(1)) : 8.5,
+    contentRating: item.rating ? item.rating.split(' ')[0] : 'TV-14',
+    genres: genres.length > 0 ? genres : ['Animation', 'Action', 'Fantasy'],
+    posterUrl,
+    backdropUrl,
+    videoUrl: `https://vidsrc.to/embed/tv/${malId}/1/1`,
+    seasons: [
+      {
+        seasonNumber: 1,
+        title: item.title || 'Season 1',
+        episodes,
+      },
+    ],
+    quality: '4K UHD',
+    isFeatured: (item.score || 0) >= 8.8,
+    isTrending: true,
+    createdAt: Date.now(),
+  };
+}
+
+export async function fetchJikanTopAnime(page = 1): Promise<{ results: MediaItem[]; totalPages: number }> {
+  try {
+    const res = await fetch(`${JIKAN_BASE_URL}/top/anime?page=${page}&limit=20`);
+    if (res.ok) {
+      const data = await res.json();
+      const results = (data.data || []).map(formatJikanAnime);
+      return { results, totalPages: data.pagination?.last_visible_page || 1 };
+    }
+  } catch (err) {
+    console.warn('Failed to fetch from Jikan API, using fallback:', err);
+  }
+  return { results: [], totalPages: 1 };
+}
+
+export async function searchJikanAnime(query: string, page = 1): Promise<{ results: MediaItem[]; totalPages: number }> {
+  try {
+    const res = await fetch(`${JIKAN_BASE_URL}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=20`);
+    if (res.ok) {
+      const data = await res.json();
+      const results = (data.data || []).map(formatJikanAnime);
+      return { results, totalPages: data.pagination?.last_visible_page || 1 };
+    }
+  } catch (err) {
+    console.warn('Failed to search from Jikan API:', err);
+  }
+  return { results: [], totalPages: 1 };
+}
+
 export async function fetchTmdbSeasonEpisodes(id: number | string, seasonNumber: number): Promise<any> {
   try {
     const res = await safeFetch(`/api/tmdb/tv/${id}/season/${seasonNumber}`);

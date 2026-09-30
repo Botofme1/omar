@@ -9,6 +9,8 @@ import {
   fetchTmdbPopular,
   fetchTmdbSearch,
   fetchTmdbDetails,
+  fetchJikanTopAnime,
+  searchJikanAnime,
 } from '../services/api';
 
 interface MediaContextType {
@@ -126,6 +128,14 @@ export const MediaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsLoading(true);
     try {
       if (searchQuery.trim().length > 1) {
+        if (activeTab === 'anime') {
+          const jikanSearch = await searchJikanAnime(searchQuery.trim(), 1);
+          if (jikanSearch.results.length > 0) {
+            setTmdbItems(jikanSearch.results);
+            setIsLoading(false);
+            return;
+          }
+        }
         const data = await fetchTmdbSearch(searchQuery.trim(), 1);
         if (data.results.length > 0) {
           setTmdbItems(data.results);
@@ -141,12 +151,13 @@ export const MediaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const data = await fetchTmdbPopular('tv', 1);
         setTmdbItems(data.results);
       } else if (activeTab === 'anime') {
-        const data = await fetchTmdbSearch('anime', 1);
-        if (data.results.length > 0) {
-          setTmdbItems(data.results);
+        // Real Jikan MyAnimeList API for Anime
+        const jikanData = await fetchJikanTopAnime(1);
+        if (jikanData.results.length > 0) {
+          setTmdbItems(jikanData.results);
         } else {
-          const fallbackTrending = await fetchTmdbTrending('all', 1);
-          setTmdbItems(fallbackTrending.results);
+          const tmdbAnime = await fetchTmdbSearch('anime', 1);
+          setTmdbItems(tmdbAnime.results);
         }
       } else if (activeTab === 'trending') {
         const data = await fetchTmdbTrending('all', 1);

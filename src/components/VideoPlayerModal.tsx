@@ -145,14 +145,30 @@ export const VideoPlayerModal: React.FC = () => {
 
   if (!selectedMedia) return null;
 
-  // Accurate Streaming URL generator for TMDB Movies & Series
+  // Accurate Streaming URL generator for TMDB & Anime Movies & Series
   const getEmbedUrl = (): string => {
     const tmdbId = selectedMedia.tmdbId;
+    const malId = selectedMedia.malId;
+    const season = selectedSeasonNumber || 1;
+    const episode = activeEpisode?.episodeNumber || 1;
+
+    // Anime or item with malId
+    if (malId && !tmdbId) {
+      switch (selectedServer) {
+        case 'vidsrcto':
+          return `https://vidsrc.to/embed/tv/${malId}/${season}/${episode}`;
+        case 'vidsrcpm':
+          return `https://vidsrc.pm/embed/tv/${malId}/${season}/${episode}`;
+        case 'multiembed':
+          return `https://multiembed.mov/?video_id=${malId}&s=${season}&e=${episode}`;
+        case 'embedsu':
+          return `https://embed.su/embed/tv/${malId}/${season}/${episode}`;
+        default:
+          return `https://vidsrc.to/embed/tv/${malId}/${season}/${episode}`;
+      }
+    }
 
     if (tmdbId) {
-      const season = selectedSeasonNumber || 1;
-      const episode = activeEpisode?.episodeNumber || 1;
-
       if (selectedMedia.type === 'movie') {
         switch (selectedServer) {
           case 'vidsrcto':
@@ -181,6 +197,11 @@ export const VideoPlayerModal: React.FC = () => {
             return `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
         }
       }
+    }
+
+    // Direct multiembed query by title if no numeric id
+    if (selectedMedia.title) {
+      return `https://multiembed.mov/?video_id=${encodeURIComponent(selectedMedia.title)}`;
     }
 
     // Custom or fallback video

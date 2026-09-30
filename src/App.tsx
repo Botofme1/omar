@@ -15,10 +15,14 @@ import { Footer } from './components/Footer';
 const AppContent: React.FC = () => {
   const { mediaList, activeTab, isAdManagerOpen, isAddModalOpen } = useMedia();
 
-  // Featured highlights for the hero billboard
+  // Featured highlights for the hero billboard - ensuring Terrifier 3 (TMDB ID: 1034541) is top featured
   const featuredItems = React.useMemo(() => {
-    const featured = mediaList.filter((m) => m.isFeatured);
-    return featured.length > 0 ? featured : mediaList.slice(0, 3);
+    const terrifier = mediaList.find((m) => m.tmdbId === 1034541 || m.id.includes('1034541'));
+    const others = mediaList.filter((m) => m.isFeatured && m.tmdbId !== 1034541 && !m.id.includes('1034541'));
+    if (terrifier) {
+      return [terrifier, ...others];
+    }
+    return others.length > 0 ? others : mediaList.slice(0, 3);
   }, [mediaList]);
 
   return (

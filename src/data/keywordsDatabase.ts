@@ -33,6 +33,7 @@ export const SEARCH_KEYWORDS: KeywordSuggestion[] = [
   { text: 'Steins;Gate', arabic: 'شتاينز غيت', category: 'anime' },
 
   // MOVIES
+  { text: 'Terrifier 3', arabic: 'تيريفاير 3 رعب', category: 'movie' },
   { text: 'Interstellar', arabic: 'انترستيلر خيال علمي', category: 'movie' },
   { text: 'Oppenheimer', arabic: 'اوبنهايمر', category: 'movie' },
   { text: 'The Dark Knight', arabic: 'باتمان فارس الظلام', category: 'movie' },
@@ -83,6 +84,7 @@ export const SEARCH_KEYWORDS: KeywordSuggestion[] = [
 ];
 
 export const POPULAR_CHIPS = [
+  { label: '🩸 Terrifier 3', query: 'Terrifier 3' },
   { label: '🔥 Attack on Titan', query: 'Attack on Titan' },
   { label: '⚔️ One Piece', query: 'One Piece' },
   { label: '🌌 Interstellar', query: 'Interstellar' },

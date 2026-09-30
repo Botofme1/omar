@@ -197,6 +197,8 @@ export const MediaGrid: React.FC = () => {
                   ? 'All Blockbuster Movies'
                   : activeTab === 'series'
                   ? 'All TV Series & Shows'
+                  : activeTab === 'anime'
+                  ? 'Japanese Anime (MyAnimeList / Jikan)'
                   : activeTab === 'trending'
                   ? 'Trending Now'
                   : 'Explore All Titles'}

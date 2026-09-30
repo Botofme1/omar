@@ -50,6 +50,7 @@ export interface MediaItem {
   isTrending?: boolean;
   createdAt: number;
   tmdbId?: number | string;
+  malId?: number | string;
   subtitles?: SubtitleTrack[];
 }
 
