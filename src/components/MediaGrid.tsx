@@ -13,9 +13,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
-import { useAds } from '../context/AdContext';
 import { MediaCard } from './MediaCard';
-import { NativeAdCard } from './NativeAdCard';
 import { SearchAutocomplete } from './SearchAutocomplete';
 import { MediaItem } from '../types';
 import { matchMediaItem } from '../data/keywordsDatabase';
@@ -56,9 +54,6 @@ export const MediaGrid: React.FC = () => {
     aiRecommendation,
     setIsAddModalOpen,
   } = useMedia();
-
-  const { getAdByPlacement } = useAds();
-  const nativeAd = getAdByPlacement('in_feed_native');
 
   // Continue watching items
   const continueWatchingItems = useMemo(() => {
@@ -302,15 +297,9 @@ export const MediaGrid: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
-            {paginatedItems.map((item, index) => {
-              const shouldInsertAd = nativeAd && (index + 1) === 4;
-              return (
-                <React.Fragment key={item.id}>
-                  <MediaCard item={item} />
-                  {shouldInsertAd && <NativeAdCard ad={nativeAd} />}
-                </React.Fragment>
-              );
-            })}
+            {paginatedItems.map((item) => (
+              <MediaCard key={item.id} item={item} />
+            ))}
           </div>
         )}
 

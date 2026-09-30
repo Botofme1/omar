@@ -164,16 +164,6 @@ export const Navbar: React.FC = () => {
             <span className="hidden sm:inline">AI Concierge</span>
           </button>
 
-          {/* Monetization / Ad Settings (discreet gear icon) */}
-          <button
-            onClick={() => setIsAdManagerOpen(true)}
-            title="Monetization & Ad Settings"
-            aria-label="Monetization settings"
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-          </button>
-
           {/* Add Title Button */}
           <button
             onClick={handleOpenAdd}

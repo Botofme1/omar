@@ -242,15 +242,15 @@ export const MediaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [watchHistory]);
 
   const playMedia = async (item: MediaItem, episode?: Episode, resumeAtSecond?: number) => {
-    // If it's a TMDB TV series and seasons are not loaded yet, fetch full details
-    if (item.tmdbId && item.type === 'series' && (!item.seasons || item.seasons.length === 0)) {
+    // If it's a TMDB movie or TV series, enrich with trailer, watch providers, and runtime/seasons
+    if (item.tmdbId && (!item.trailerKey || !item.watchProviders)) {
       try {
-        const fullDetails = await fetchTmdbDetails('series', item.tmdbId);
+        const fullDetails = await fetchTmdbDetails(item.type === 'movie' ? 'movie' : 'series', item.tmdbId);
         if (fullDetails) {
           item = { ...item, ...fullDetails };
         }
       } catch (err) {
-        console.warn('Could not fetch TMDB full details for player', err);
+        console.warn('Could not fetch TMDB full details for modal', err);
       }
     }
 

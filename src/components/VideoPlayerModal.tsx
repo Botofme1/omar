@@ -12,11 +12,11 @@ import {
   MessageSquare,
   AlertCircle,
   RefreshCw,
+  Video,
 } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
-import { Episode, Comment } from '../types';
-import { AdBanner } from './AdBanner';
-import { getComments, postComment, getAISummary, fetchTmdbSeasonEpisodes } from '../services/api';
+import { Episode, Comment, MediaItem } from '../types';
+import { getComments, postComment, getAISummary, fetchTmdbSeasonEpisodes, fetchTmdbSimilar } from '../services/api';
 
 type EmbedServer = 'vidsrcto' | 'vidsrcpm' | 'multiembed' | 'embedsu';
 
@@ -36,9 +36,13 @@ export const VideoPlayerModal: React.FC = () => {
     isInWatchlist,
     toggleWatchlist,
     recordProgress,
+    playMedia,
   } = useMedia();
 
   const [selectedServer, setSelectedServer] = useState<EmbedServer>('vidsrcto');
+
+  // Player view mode: 'stream' | 'trailer'
+  const [playerMode, setPlayerMode] = useState<'stream' | 'trailer'>('stream');
 
   // Iframe loading and error states
   const [isIframeLoading, setIsIframeLoading] = useState(true);
@@ -48,6 +52,9 @@ export const VideoPlayerModal: React.FC = () => {
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState(1);
   const [currentSeasonEpisodes, setCurrentSeasonEpisodes] = useState<Episode[]>([]);
   const [isLoadingSeason, setIsLoadingSeason] = useState(false);
+
+  // Similar titles
+  const [similarTitles, setSimilarTitles] = useState<MediaItem[]>([]);
 
   // Comments and AI Summary
   const [comments, setComments] = useState<Comment[]>([]);
@@ -60,6 +67,7 @@ export const VideoPlayerModal: React.FC = () => {
   const handleClose = () => {
     setActiveEpisode(null);
     setSelectedMedia(null);
+    setPlayerMode('stream');
     setIsIframeLoading(false);
     setIframeHasError(false);
   };
@@ -88,6 +96,7 @@ export const VideoPlayerModal: React.FC = () => {
   useEffect(() => {
     if (!selectedMedia) return;
 
+    setPlayerMode('stream');
     setIsIframeLoading(true);
     setIframeHasError(false);
 
@@ -103,6 +112,13 @@ export const VideoPlayerModal: React.FC = () => {
 
     getComments(selectedMedia.id).then(setComments);
     setAiSummary(null);
+
+    // Fetch similar titles from TMDB if tmdbId is present
+    if (selectedMedia.tmdbId) {
+      fetchTmdbSimilar(selectedMedia.type === 'movie' ? 'movie' : 'tv', selectedMedia.tmdbId).then(setSimilarTitles);
+    } else {
+      setSimilarTitles([]);
+    }
 
     recordProgress(selectedMedia.id, 0, 7200, activeEpisode?.id);
   }, [selectedMedia?.id]);
@@ -141,12 +157,17 @@ export const VideoPlayerModal: React.FC = () => {
     }, 9000);
 
     return () => clearTimeout(safetyTimer);
-  }, [selectedMedia?.id, selectedServer, selectedSeasonNumber, activeEpisode?.episodeNumber]);
+  }, [selectedMedia?.id, selectedServer, selectedSeasonNumber, activeEpisode?.episodeNumber, playerMode]);
 
   if (!selectedMedia) return null;
 
   // Accurate Streaming URL generator for TMDB & Anime Movies & Series
   const getEmbedUrl = (): string => {
+    // Official trailer mode
+    if (playerMode === 'trailer' && selectedMedia.trailerKey) {
+      return `https://www.youtube.com/embed/${selectedMedia.trailerKey}?autoplay=1&rel=0`;
+    }
+
     const tmdbId = selectedMedia.tmdbId;
     const malId = selectedMedia.malId;
     const season = selectedSeasonNumber || 1;
@@ -279,6 +300,26 @@ export const VideoPlayerModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Watch Trailer Button (if TMDB trailer key is available) */}
+            {selectedMedia.trailerKey && (
+              <button
+                onClick={() => {
+                  setPlayerMode((prev) => (prev === 'trailer' ? 'stream' : 'trailer'));
+                  setIsIframeLoading(true);
+                  setIframeHasError(false);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                  playerMode === 'trailer'
+                    ? 'bg-amber-600 border-amber-500 text-white'
+                    : 'bg-slate-800 border-white/10 text-amber-300 hover:text-white'
+                }`}
+                title="Watch Official YouTube Trailer"
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span>{playerMode === 'trailer' ? 'Watch Stream' : 'Official Trailer'}</span>
+              </button>
+            )}
+
             {/* Open in Dedicated Page */}
             <button
               onClick={handleOpenDedicatedTab}
@@ -321,10 +362,12 @@ export const VideoPlayerModal: React.FC = () => {
             <div className="absolute inset-0 z-10 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-center p-4">
               <RefreshCw className="w-8 h-8 text-rose-500 animate-spin mb-3" />
               <p className="text-xs sm:text-sm font-semibold text-white">
-                Loading stream from {EMBED_SERVERS.find((s) => s.id === selectedServer)?.label}...
+                {playerMode === 'trailer'
+                  ? 'Loading Official Trailer...'
+                  : `Loading stream from ${EMBED_SERVERS.find((s) => s.id === selectedServer)?.label}...`}
               </p>
               <p className="text-xs text-slate-400 mt-1 max-w-xs">
-                Streaming directly using TMDB ID: {selectedMedia.tmdbId}
+                {selectedMedia.title}
               </p>
             </div>
           )}
@@ -433,10 +476,8 @@ export const VideoPlayerModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Content Details, Series Episodes, and Community Reviews */}
+        {/* Content Details, Where to Watch, and Similar Titles */}
         <div className="p-4 sm:p-6 flex flex-col gap-6">
-          <AdBanner placement="below_player" />
-
           {/* TV Series Episode Picker (if series) */}
           {selectedMedia.type === 'series' && (
             <div className="border border-white/10 rounded-xl p-4 bg-[#0d1322]">
@@ -482,6 +523,7 @@ export const VideoPlayerModal: React.FC = () => {
                         key={ep.id || `ep-${ep.episodeNumber}`}
                         onClick={() => {
                           setActiveEpisode(ep);
+                          setPlayerMode('stream');
                           setIsIframeLoading(true);
                           setIframeHasError(false);
                         }}
@@ -532,13 +574,13 @@ export const VideoPlayerModal: React.FC = () => {
             </div>
           )}
 
-          {/* Storyline & AI Analysis */}
+          {/* Storyline & Specs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
             <div className="md:col-span-2 space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
-                    Storyline
+                    Overview
                   </h3>
                   <button
                     onClick={handleGenerateAISummary}
@@ -546,7 +588,7 @@ export const VideoPlayerModal: React.FC = () => {
                     className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-rose-300 bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/30 rounded-lg transition-colors"
                   >
                     <Sparkles className="w-3 h-3 text-rose-400" />
-                    <span>{isAiLoading ? 'Analyzing...' : 'AI Synopsis & Themes'}</span>
+                    <span>{isAiLoading ? 'Analyzing...' : 'AI Insights'}</span>
                   </button>
                 </div>
                 <p className="text-sm text-slate-300 leading-relaxed">
@@ -585,9 +627,9 @@ export const VideoPlayerModal: React.FC = () => {
               </div>
             </div>
 
-            {/* Side specs & Open Provider Info */}
+            {/* Side specs & Where to Watch Providers */}
             <div className="bg-[#0f1422] rounded-xl p-4 border border-white/5 flex flex-col justify-between text-xs space-y-4">
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center text-slate-400">
                   <span>Rating:</span>
                   <span className="text-amber-400 font-bold font-mono">
@@ -595,24 +637,105 @@ export const VideoPlayerModal: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-400">
-                  <span>Year:</span>
+                  <span>Release Year:</span>
                   <span className="text-slate-200 font-mono">{selectedMedia.releaseYear}</span>
+                </div>
+                {selectedMedia.duration && (
+                  <div className="flex justify-between items-center text-slate-400">
+                    <span>Runtime:</span>
+                    <span className="text-slate-200 font-mono">{selectedMedia.duration}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-slate-400">
+                  <span>Content Rating:</span>
+                  <span className="text-slate-200 font-mono">{selectedMedia.contentRating}</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-400">
                   <span>TMDB ID:</span>
                   <span className="text-emerald-400 font-mono font-semibold">{selectedMedia.tmdbId || 'N/A'}</span>
                 </div>
+
+                {/* Where to Watch (Official TMDB Watch Providers) */}
+                {selectedMedia.watchProviders && selectedMedia.watchProviders.length > 0 && (
+                  <div className="pt-3 border-t border-white/10 space-y-2">
+                    <span className="text-slate-300 font-semibold uppercase text-[10px] tracking-wider block">
+                      Where to Watch (Official):
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {selectedMedia.watchProviders.map((prov) => (
+                        <div
+                          key={prov.provider_id}
+                          className="flex items-center gap-1.5 bg-[#171f33] px-2 py-1 rounded border border-white/10"
+                          title={prov.provider_name}
+                        >
+                          {prov.logo_path && (
+                            <img src={prov.logo_path} alt={prov.provider_name} className="w-4 h-4 rounded" />
+                          )}
+                          <span className="text-[11px] text-slate-200 truncate max-w-[100px]">
+                            {prov.provider_name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {selectedMedia.providerLink && (
+                      <a
+                        href={selectedMedia.providerLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-rose-400 hover:text-rose-300 underline block pt-1"
+                      >
+                        Check all streaming providers on TMDB &rarr;
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <button
-                onClick={handleOpenDedicatedTab}
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Open in Full Screen Tab</span>
-              </button>
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={handleOpenDedicatedTab}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open Full Screen Watch Tab</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Similar Titles Section */}
+          {similarTitles.length > 0 && (
+            <div className="border-t border-white/10 pt-6">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono mb-4 flex items-center gap-2">
+                <Film className="w-4 h-4 text-rose-500" />
+                <span>More Like This</span>
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                {similarTitles.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => playMedia(item)}
+                    className="cursor-pointer group flex flex-col rounded-lg overflow-hidden bg-[#101728] border border-white/5 hover:border-rose-500/50 transition-all p-2"
+                  >
+                    <div className="aspect-[2/3] w-full rounded overflow-hidden mb-2 bg-slate-900">
+                      <img
+                        src={item.posterUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <h4 className="text-xs font-semibold text-white truncate group-hover:text-rose-400">
+                      {item.title}
+                    </h4>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+                      <span>{item.releaseYear}</span>
+                      <span className="text-amber-400 font-mono">★ {item.rating.toFixed(1)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Community Reviews & Comments */}
           <div className="border-t border-white/10 pt-6">

@@ -72,10 +72,10 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Publisher & Monetization Controls */}
+          {/* Platform & Indexing */}
           <div>
             <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-3 font-mono">
-              Publisher & Ads
+              Network & Discover
             </h4>
             <ul className="space-y-2">
               <li>
@@ -87,38 +87,24 @@ export const Footer: React.FC = () => {
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => setIsAdManagerOpen(true)}
-                  className="hover:text-emerald-400 transition-colors flex items-center gap-1.5"
-                >
-                  <span>Ad Placements & Settings</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setIsAdManagerOpen(true)}
-                  className="hover:text-blue-400 transition-colors flex items-center gap-1.5"
-                >
-                  <span>Google Index & Search Console</span>
-                </button>
-              </li>
-              <li>
                 <a
                   href="/sitemap.xml"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-slate-200 transition-colors"
+                  className="hover:text-slate-200 transition-colors block"
                 >
                   Sitemap XML (خريطة الموقع)
                 </a>
               </li>
               <li>
-                <button
-                  onClick={() => setIsAdManagerOpen(true)}
-                  className="hover:text-slate-200 transition-colors"
+                <a
+                  href="/robots.txt"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-slate-200 transition-colors block"
                 >
-                  AdSense & Network Setup
-                </button>
+                  Robots TXT (Googlebot Indexing)
+                </a>
               </li>
             </ul>
           </div>

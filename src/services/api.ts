@@ -53,6 +53,33 @@ function formatTmdbClient(item: any, explicitType?: 'movie' | 'series'): MediaIt
   const type = isMovie ? 'movie' : 'series';
   const tmdbId = item.id;
 
+  // Trailer key extraction if available in item.videos
+  let trailerKey: string | undefined = undefined;
+  if (item.videos?.results && Array.isArray(item.videos.results)) {
+    const trailer = item.videos.results.find(
+      (v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+    ) || item.videos.results[0];
+    if (trailer) trailerKey = trailer.key;
+  }
+
+  // Watch providers extraction if available
+  let watchProviders: Array<{ provider_id: number; provider_name: string; logo_path: string }> | undefined = undefined;
+  let providerLink: string | undefined = undefined;
+  const providerData = item['watch/providers']?.results?.US || item['watch/providers']?.results?.AR || item['watch/providers']?.results?.FR;
+  if (providerData) {
+    providerLink = providerData.link;
+    const streamProviders = providerData.flatrate || providerData.buy || providerData.rent || [];
+    if (Array.isArray(streamProviders) && streamProviders.length > 0) {
+      watchProviders = streamProviders.slice(0, 4).map((p: any) => ({
+        provider_id: p.provider_id,
+        provider_name: p.provider_name,
+        logo_path: p.logo_path ? `https://image.tmdb.org/t/p/w200${p.logo_path}` : '',
+      }));
+    }
+  }
+
+  const cast = (item.credits?.cast || []).slice(0, 5).map((c: any) => c.name);
+
   const videoUrl = isMovie
     ? `https://vidsrc.to/embed/movie/${tmdbId}`
     : `https://vidsrc.to/embed/tv/${tmdbId}/1/1`;
@@ -72,7 +99,10 @@ function formatTmdbClient(item: any, explicitType?: 'movie' | 'series'): MediaIt
     posterUrl,
     backdropUrl,
     videoUrl,
-    cast: [],
+    cast,
+    trailerKey,
+    watchProviders,
+    providerLink,
     quality: '4K UHD',
     isFeatured: (item.popularity || 0) > 100,
     isTrending: true,
@@ -177,10 +207,10 @@ export async function fetchTmdbDetails(type: 'movie' | 'series' | 'tv', id: numb
     if (res) return res;
   } catch {}
 
-  // Direct CDN fallback
+  // Direct CDN fallback with trailer videos, credits and watch providers
   try {
     const tmdbType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
-    const directRes = await fetch(`${TMDB_CDN_URL}/${tmdbType}/${id}?api_key=${CLIENT_TMDB_KEY}&append_to_response=credits`);
+    const directRes = await fetch(`${TMDB_CDN_URL}/${tmdbType}/${id}?api_key=${CLIENT_TMDB_KEY}&append_to_response=credits,videos,watch/providers,similar`);
     if (directRes.ok) {
       const data = await directRes.json();
       return formatTmdbClient(data, tmdbType === 'tv' ? 'series' : 'movie');
@@ -188,6 +218,22 @@ export async function fetchTmdbDetails(type: 'movie' | 'series' | 'tv', id: numb
   } catch {}
 
   return null;
+}
+
+export async function fetchTmdbSimilar(type: 'movie' | 'tv', id: number | string): Promise<MediaItem[]> {
+  try {
+    const res = await fetch(`${TMDB_CDN_URL}/${type}/${id}/similar?api_key=${CLIENT_TMDB_KEY}&page=1`);
+    if (res.ok) {
+      const data = await res.json();
+      return (data.results || [])
+        .filter((item: any) => item.poster_path && (item.title || item.name))
+        .slice(0, 6)
+        .map((item: any) => formatTmdbClient(item, type === 'tv' ? 'series' : 'movie'));
+    }
+  } catch (e) {
+    console.warn('Failed to fetch similar titles:', e);
+  }
+  return [];
 }
 
 // ----------------------------------------------------

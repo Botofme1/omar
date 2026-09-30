@@ -52,6 +52,9 @@ export interface MediaItem {
   tmdbId?: number | string;
   malId?: number | string;
   subtitles?: SubtitleTrack[];
+  trailerKey?: string; // YouTube video ID from TMDB /videos
+  watchProviders?: Array<{ provider_id: number; provider_name: string; logo_path: string }>;
+  providerLink?: string; // Official link to watch
 }
 
 export interface User {

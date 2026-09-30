@@ -1,19 +1,16 @@
 import React from 'react';
 import { MediaProvider, useMedia } from './context/MediaContext';
-import { AdProvider } from './context/AdContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navbar } from './components/Navbar';
 import { HeroBillboard } from './components/HeroBillboard';
 import { MediaGrid } from './components/MediaGrid';
-import { AdBanner } from './components/AdBanner';
 import { VideoPlayerModal } from './components/VideoPlayerModal';
 import { AddMediaModal } from './components/AddMediaModal';
-import { AdManagerModal } from './components/AdManagerModal';
 import { AIChatDrawer } from './components/AIChatDrawer';
 import { Footer } from './components/Footer';
 
 const AppContent: React.FC = () => {
-  const { mediaList, activeTab, isAdManagerOpen, isAddModalOpen } = useMedia();
+  const { mediaList, activeTab, isAddModalOpen } = useMedia();
 
   // Featured highlights for the hero billboard - ensuring Terrifier 3 (TMDB ID: 1034541) is top featured
   const featuredItems = React.useMemo(() => {
@@ -30,19 +27,14 @@ const AppContent: React.FC = () => {
       {/* Sticky Translucent-to-Solid Navbar */}
       <Navbar />
 
-      {/* Main Content Area */}
+      {/* Main Streaming Content Area */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-        {/* Top Header Leaderboard Ad */}
-        <div className="mb-6">
-          <AdBanner placement="header_leaderboard" />
-        </div>
-
         {/* Dynamic Hero Billboard Carousel */}
         {featuredItems.length > 0 && (activeTab === 'all' || activeTab === 'trending') && (
           <HeroBillboard items={featuredItems} />
         )}
 
-        {/* Main Titles Catalog with Rows, In-Feed Ads, and Advanced Filters */}
+        {/* Main Titles Catalog with Rows, Real TMDB & Anime Data, and Advanced Filters */}
         <MediaGrid />
       </main>
 
@@ -53,10 +45,6 @@ const AppContent: React.FC = () => {
       <VideoPlayerModal />
       <AIChatDrawer />
       {isAddModalOpen && <AddMediaModal />}
-      {isAdManagerOpen && <AdManagerModal />}
-
-      {/* Sticky Bottom Floating Banner Ad */}
-      <AdBanner placement="sticky_bottom" />
     </div>
   );
 };
@@ -64,11 +52,9 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AdProvider>
-        <MediaProvider>
-          <AppContent />
-        </MediaProvider>
-      </AdProvider>
+      <MediaProvider>
+        <AppContent />
+      </MediaProvider>
     </ErrorBoundary>
   );
 }
